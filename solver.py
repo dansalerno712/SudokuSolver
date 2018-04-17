@@ -1,8 +1,39 @@
+#Jared Bass, Dan Salerno, Brian Silverman
+#We pledge our honor that we have abided by the Stevens Honor System
+
+#Single array to save time creating it over and over. Is reset to full Nones after each check
+checking = [None, None, None, None, None, None, None, None, None]
+
+def unique(l):
+    """Checks if a list contains all unique items in O(n) time"""
+    returning = False
+    for item in l:
+        if checking[item-1] == None:
+            checking[item-1] = 1
+        else:
+            returning = True
+            break
+
+    for i in range(9):
+        checking[i] = None
+
+    return returning
+
+def is_valid(grid, row, col):
+    """Checks if the number added at spot row x col is a valid move"""
+    #Checks if row has unique numbers
+    p1 = unique(grid[row])
+    #Checks if column has unique numbers: TODO
+    p2 = False
+    #Checks if box has unique numbers: TODO
+    p3 = False
+
+    return p1 and p2 and p3
+
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
         yield l[i:i + n]
-
 
 def prettyPrint(grid):
     """Somewhat pretty printing of a sudoku grid"""
@@ -27,7 +58,6 @@ def prettyPrint(grid):
     # ending horizontal line
     print(horizontalLine)
 
-
 def main():
     # hardcoding the filename because im lazy
     fileName = "p096_sudoku.txt"
@@ -47,8 +77,8 @@ def main():
     # splits the list of list of grid lines into chunks of 9 lines to break them
     # into puzzles
     grids = list(chunks(lines, 9))
+    print(grids[0])
     prettyPrint(grids[0])
-
 
 if __name__ == '__main__':
     main()
