@@ -3,23 +3,15 @@
 
 import itertools
 
-#Single array to save time creating it over and over. Is reset to full Nones after each check
-checking = [None, None, None, None, None, None, None, None, None]
 
-def unique(l):
-    """Checks if a list contains all unique items in O(n) time"""
-    returning = False
-    for item in l:
-        if checking[item-1] == None:
-            checking[item-1] = 1
-        else:
-            returning = True
-            break
+def is_unique(l):
+    """Checks if a list contains all unique items (except possible Nones)
+	quickly.
 
-    for i in range(9):
-        checking[i] = None
-
-    return returning
+    Note that although this is technically O(N log N), and other possible
+    algorithms are O(N), in practice N=9 so the constant overhead matters
+    way more and this is faster."""
+    return len(l) == len(set(l))
 
 def is_valid(grid, row, col):
     """Checks if the number added at spot row x col is a valid move"""
