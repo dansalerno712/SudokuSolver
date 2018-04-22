@@ -32,9 +32,9 @@ def _min_and_max(l):
             max_r = e
     return min_r, max_r
 
-class Grid(object):
-    """An immutable object representing a complete grid of numbers, or None to
-    indicate blank squares.
+class GridStorage(object):
+    """An object representing something stored in a Sudoku-style grid. These
+    may be any kind of object.
 
     We store the values in a single tuple, and expose them in various
     convenient ways via accessors. Doing it this way makes creating modified
@@ -80,52 +80,69 @@ class Grid(object):
     """
 
     def __init__(self, values):
-        self._values = tuple(values)
+        self._values = values
         assert len(self._values) == 9 * 9, "invalid length"
 
-        min_in, max_in = _min_and_max(self._values)
-        assert min_in is None or min_in >= 1, "invalid value"
-        assert max_in is None or max_in <= 9, "invalid value"
-
     def __repr__(self):
-        return "Grid(%s)" % repr(self._values)
+        return "Grid(%s)" % repr(self.values)
+
+    def __str__(self):
+        return "Grid(%s)" % str(self.values)
 
     def __eq__(self, other):
-        return self._values == other._values
+        return self.values == other.values
 
-    def __hash__(self):
-        # Don't hash to the same as just the values tuple, because that could be
-        # undesirable for some use cases.
-        return hash(tuple(self._values, 971))
+    @property
+    def values(self):
+        return self._values
 
     def cell(self, row, column):
         """Returns the value at the specified row and column."""
-        return self._values[row * 9 + column]
+        return self.values[row * 9 + column]
 
     def square(self, index):
         """Returns a tuple with the values for the specified square."""
         start_position = (index // 3) * (9 * 3) + (index % 3) * 3
-        top = self._values[start_position:start_position + 3]
+        top = self.values[start_position:start_position + 3]
         start_position += 9
-        middle = self._values[start_position:start_position + 3]
+        middle = self.values[start_position:start_position + 3]
         start_position += 9
-        bottom = self._values[start_position:start_position + 3]
+        bottom = self.values[start_position:start_position + 3]
         return top + middle + bottom
 
     def row(self, index):
         """Returns a tuple with the values for the specified row."""
         start_position = index * 9
-        return self._values[start_position:start_position + 9]
+        return self.values[start_position:start_position + 9]
 
     def column(self, index):
         """Returns a tuple with the values for the specified column."""
-        return self._values[index::9]
+        return self.values[index::9]
+
+class Grid(GridStorage):
+    """An immutable object representing a complete grid of numbers, or None to
+    indicate blank squares.
+
+    See the GridStorage docs for details about the layout of the storage. Note
+    that this subclass always stores the values in a tuple, to preserve
+    immutability."""
+
+    def __init__(self, values):
+        super().__init__(tuple(values))
+        min_in, max_in = _min_and_max(self.values)
+        assert min_in is None or min_in >= 1, "invalid value"
+        assert max_in is None or max_in <= 9, "invalid value"
+
+    def __hash__(self):
+        # Don't hash to the same as just the values tuple, because that could be
+        # undesirable for some use cases.
+        return hash(tuple(self.values, 971))
 
     def is_complete(self):
         """Returns True if there are no None (unknown) values.
 
         Note that this does not mean it is a valid solution."""
-        return not not next(filter(lambda x: x is None, self._values), True)
+        return not not next(filter(lambda x: x is None, self.values), True)
 
     def is_valid(self):
         """Returns True if there are no conflicting values.
@@ -144,16 +161,16 @@ class Grid(object):
 
     def pretty(self):
         """Returns a human-readable representation."""
-        horizontal_line = ('+',) + (('-',) * 7 + ('+',)) * 3 + ('\n',)
+        horizontal_line = ("+",) + (("-",) * 7 + ("+",)) * 3 + ("\n",)
         r = []
         r.extend(horizontal_line)
         for square_row in range(3):
             for row_index in range(square_row * 3, square_row * 3 + 3):
                 for group in util.grouper(self.row(row_index), 3):
-                    r.append('| ')
+                    r.append("| ")
                     for cell in group:
-                        r.append(str(cell) if cell is not None else 'x')
-                        r.append(' ')
-                r.append('|\n')
+                        r.append(str(cell) if cell is not None else "x")
+                        r.append(" ")
+                r.append("|\n")
             r.extend(horizontal_line)
-        return ''.join(r[:-1])
+        return "".join(r[:-1])

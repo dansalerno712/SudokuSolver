@@ -20,7 +20,7 @@ TEST_VALUES = (
         6, 7, 8, 9, 1, 2, 3, 4, 5,
         9, 1, 2, 3, 4, 5, 6, 7, 8,
 )
-"""A (trivial) solved grid."""
+"""The values in a (trivial) solved grid."""
 
 class TestGrid(unittest.TestCase):
     def test_constructor(self):
@@ -124,7 +124,7 @@ class TestGrid(unittest.TestCase):
 
     def test_pretty(self):
         expected = \
-'''+-------+-------+-------+
+"""+-------+-------+-------+
 | 1 2 3 | 4 5 6 | 7 8 9 |
 | 4 5 6 | 7 8 9 | 1 2 3 |
 | 7 8 9 | 1 2 3 | 4 5 6 |
@@ -136,14 +136,14 @@ class TestGrid(unittest.TestCase):
 | 3 4 5 | 6 7 8 | 9 1 2 |
 | 6 7 8 | 9 1 2 | 3 4 5 |
 | 9 1 2 | 3 4 5 | 6 7 8 |
-+-------+-------+-------+'''
++-------+-------+-------+"""
         self.assertEqual(expected, grid.Grid(TEST_VALUES).pretty())
 
         values = list(TEST_VALUES)
         values[0] = None
         expected = list(expected)
-        expected[28] = 'x'
-        expected = ''.join(expected)
+        expected[28] = "x"
+        expected = "".join(expected)
         self.assertTrue(grid.Grid(values).is_valid())
         self.assertEqual(expected, grid.Grid(values).pretty())
 

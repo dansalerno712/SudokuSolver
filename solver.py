@@ -21,15 +21,40 @@ EXAMPLE_SOLUTION = grid.Grid((
 ))
 """The solution to the first grid from the problem."""
 
-def main():
-    # hardcoding the file_name because im lazy
-    file_name = "p096_sudoku.txt"
-    grids = []
+_ALL_VALUES = (1, 2, 3, 4, 5, 6, 7, 8, 9)
 
-    # read the file
+def possibilities(g):
+    """Returns a GridStorage(set) where each element is either all remaining
+    possible values for the cell, or None if the cell is already filled out."""
+    result_values = []
+    for c in g.values:
+        if c is None:
+            result_values.append(set(_ALL_VALUES))
+        else:
+            result_values.append(None)
+    result = grid.GridStorage(result_values)
+    for r in range(9):
+        values = set(g.row(r))
+        for cell in result.row(r):
+            if cell is not None:
+                cell.difference_update(values)
+    for c in range(9):
+        values = set(g.column(c))
+        for cell in result.column(c):
+            if cell is not None:
+                cell.difference_update(values)
+    for s in range(9):
+        values = set(g.square(s))
+        for cell in result.square(s):
+            if cell is not None:
+                cell.difference_update(values)
+    return result
+
+def main():
+    # Read the file with all the puzzles to solve.
     grid_values = None
     grids = []
-    with open(file_name) as f:
+    with open("p096_sudoku.txt") as f:
         for line in f:
             if line.startswith("Grid"):
                 # Time to finish the current one and start a new one.
@@ -40,7 +65,7 @@ def main():
                 # For each character in the line, convert it to an int, or
                 # use None instead if it's 0.
                 grid_values.extend(
-                        (int(c) if c != '0' else None for c in line.strip()))
+                        (int(c) if c != "0" else None for c in line.strip()))
     # Make sure to grab the last grid.
     grids.append(grid.Grid(grid_values))
     assert len(grids) == 50
@@ -52,8 +77,8 @@ def main():
 
     # Some basic sanity checking.
     for g in grids:
-        assert not g.is_complete(), '%s is already finished' % (g,)
-        assert g.is_valid(), '%s is impossible' % (g,)
+        assert not g.is_complete(), "%s is already finished" % (g,)
+        assert g.is_valid(), "%s is impossible" % (g,)
 
 if __name__ == "__main__":
     main()
