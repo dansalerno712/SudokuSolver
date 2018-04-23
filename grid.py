@@ -159,6 +159,12 @@ class Grid(GridStorage):
                 return False
         return True
 
+    def set_position(self, row, column, new_number):
+        """Returns a new grid with the spot at (row, column) replaced by new_number"""
+        assert row <= 8 and col <= 8
+        assert self.values[row * 9 + column] is None
+        return Grid([self.values[i] if i != (row * 9) + column else new_number for i in range(len(self.values))])        
+
     def pretty(self):
         """Returns a human-readable representation."""
         horizontal_line = ("+",) + (("-",) * 7 + ("+",)) * 3 + ("\n",)
