@@ -147,5 +147,9 @@ class TestGrid(unittest.TestCase):
         self.assertTrue(grid.Grid(values).is_valid())
         self.assertEqual(expected, grid.Grid(values).pretty())
 
+    def test_euler_answer(self):
+        expected = 123
+        self.assertEqual(expected, grid.Grid(TEST_VALUES).euler_answer())
+
 if __name__ == "__main__":
     unittest.main()

@@ -174,3 +174,12 @@ class Grid(GridStorage):
                 r.append("|\n")
             r.extend(horizontal_line)
         return "".join(r[:-1])
+
+
+    def euler_answer(self):
+        """Returns the 3 digit number represented by the top left corner of
+        the solved Sudoku puzzle as per the Project Euler specs. Asserts 
+        that the puzzle is completed so I can't try to make a number out
+        of a None"""
+        assert(self.is_complete())
+        return self.cell(0, 0) * 100 + self.cell(0, 1) * 10 + self.cell(0, 2)
