@@ -74,8 +74,8 @@ def _sorted_by_combined_size(group):
     """Returns indexes into a group of cell possibilities sorted by the smallest
     size, excluding ones which are None."""
     r = []
-    for i, l in zip(range(9), group):
-        s = _combined_size(group)
+    for i, l in zip(range(9), iter(group)):
+        s = _combined_size(l)
         if s > 0:
             r.append((i, s))
     r.sort(key=operator.itemgetter(1))
@@ -129,6 +129,8 @@ def solve(g):
             break
         g = new
 
+    if not g.is_valid():
+        return None
     if g.is_complete():
         return g
 
@@ -161,11 +163,6 @@ def main():
     grids.append(grid.Grid(grid_values))
     assert len(grids) == 50
 
-    print(str(grids[0]))
-    print(grids[0].pretty())
-    print(EXAMPLE_SOLUTION.pretty())
-    assert EXAMPLE_SOLUTION.is_complete() and EXAMPLE_SOLUTION.is_valid()
-
     euler_answer = 0
     i = 0
     for g in grids:
@@ -174,16 +171,18 @@ def main():
         assert g.is_valid(), "%s is impossible" % (g,)
 
         print('Before %d:' % i)
-        i += 1
         print(g.pretty())
         solved = solve(g)
         if not solved.is_complete():
-            print('------------- Failed to solve... ------------')
+            print('------------- Failed to solve %d... ------------' % i)
         else:
-            print('After:')
+            assert solved.is_valid(), (solved,)
+
+            print('After %d:' % i)
             print(solved.pretty())
 
             euler_answer += solved.euler_answer()
+        i += 1
     print('Euler answer: %d' % euler_answer)
 
 if __name__ == "__main__":
