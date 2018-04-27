@@ -63,6 +63,32 @@ def set_trivial(g):
                     g = g.set_position(r, c, next(iter(cell)))
     return g
 
+def cells_to_try(p):
+    for r in range(9):
+        for c in range(9):
+            if p.cell(r, c) is not None:
+                yield r, c
+
+def solve(g):
+    """Returns a solution to g."""
+    while True:
+        new = set_trivial(g)
+        if new == g:
+            break
+        g = new
+
+    if g.is_complete():
+        return g
+
+    p = possibilities(g)
+    for row, column in cells_to_try(p):
+        for value in p.cell(row, column):
+            result = solve(g.set_position(row, column, value))
+            if result is not None:
+                return result
+    # Failed to solve. Time to try another branch down the possibilities tree.
+    return None
+
 def main():
     # Read the file with all the puzzles to solve.
     grid_values = None
@@ -88,10 +114,23 @@ def main():
     print(EXAMPLE_SOLUTION.pretty())
     assert EXAMPLE_SOLUTION.is_complete() and EXAMPLE_SOLUTION.is_valid()
 
-    # Some basic sanity checking.
+    euler_answer = 0
     for g in grids:
+        # Some basic sanity checking.
         assert not g.is_complete(), "%s is already finished" % (g,)
         assert g.is_valid(), "%s is impossible" % (g,)
+
+        print('Before:')
+        print(g.pretty())
+        solved = solve(g)
+        if not solved.is_complete():
+            print('------------- Failed to solve... ------------')
+        else:
+            print('After:')
+            print(solved.pretty())
+
+            euler_answer += solved.euler_answer()
+    print('Euler answer: %d' % euler_answer)
 
 if __name__ == "__main__":
     main()
