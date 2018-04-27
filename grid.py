@@ -160,10 +160,13 @@ class Grid(GridStorage):
         return True
 
     def set_position(self, row, column, new_number):
-        """Returns a new grid with the spot at (row, column) replaced by new_number"""
-        assert row <= 8 and col <= 8
-        assert self.values[row * 9 + column] is None
-        return Grid([self.values[i] if i != (row * 9) + column else new_number for i in range(len(self.values))])        
+        """Returns a new grid with the spot at (row, column) replaced by
+        new_number. This cell must not currently contain a numer."""
+        assert row <= 8 and column <= 8
+        assert self.cell(row, column) is None
+        return Grid((self.values[i] if i != (row * 9) + column
+                     else new_number
+                     for i in range(len(self.values))))
 
     def pretty(self):
         """Returns a human-readable representation."""
@@ -184,8 +187,8 @@ class Grid(GridStorage):
 
     def euler_answer(self):
         """Returns the 3 digit number represented by the top left corner of
-        the solved Sudoku puzzle as per the Project Euler specs. Asserts 
+        the solved Sudoku puzzle as per the Project Euler specs. Asserts
         that the puzzle is completed so I can't try to make a number out
-        of a None"""
+        of a None."""
         assert(self.is_complete())
         return self.cell(0, 0) * 100 + self.cell(0, 1) * 10 + self.cell(0, 2)

@@ -27,6 +27,7 @@ class TestPossibilities(unittest.TestCase):
 
             g = grid.Grid(values)
             self.assertEqual(grid.GridStorage(p), solver.possibilities(g))
+            self.assertEqual(grid.Grid(TEST_VALUES), solver.set_trivial(g))
 
     def test_row(self):
         """Tests removing a whole row of values.
@@ -40,6 +41,7 @@ class TestPossibilities(unittest.TestCase):
 
         g = grid.Grid(values)
         self.assertEqual(grid.GridStorage(p), solver.possibilities(g))
+        self.assertEqual(grid.Grid(TEST_VALUES), solver.set_trivial(g))
 
     def test_two_rows(self):
         """Tests removing two rows of value, within the same row of squares.

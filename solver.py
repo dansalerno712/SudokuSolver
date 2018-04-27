@@ -50,16 +50,18 @@ def possibilities(g):
                 cell.difference_update(values)
     return result
 
-def set_trivial(g, possibilities):
-    """Given a grid, checks if any cells only have one possibility. If so, returns a grid with all those squares set to their one possibility"""
+def set_trivial(g):
+    """Returns a grid with all the cells that only have one possibility filled
+    in. Note that this may leave more cells with one a single possibility in the
+    result."""
+    p = possibilities(g)
     for r in range(9):
         for c in range(9):
-            cell = possibilities.values[r * 9 + c]
+            cell = p.cell(r, c)
             if cell is not None:
                 if len(cell) == 1:
-                    g = g.set_position(r,c,cell[0])
-
-
+                    g = g.set_position(r, c, next(iter(cell)))
+    return g
 
 def main():
     # Read the file with all the puzzles to solve.
