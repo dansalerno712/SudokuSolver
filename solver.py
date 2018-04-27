@@ -65,6 +65,71 @@ def set_trivial(g):
                     g = g.set_position(r, c, next(iter(cell)))
     return g
 
+def set_easy(g):
+    p = possibilities(g)
+    # rows
+    for r in range(9):
+        for c in range(9):
+            valid_count = 0
+            valid = ()
+            for num in range(1, 10):
+                cell = p.cell(r, c)
+                if cell is not None and num in cell:
+                    if valid_count == 0:
+                        valid = (r, c, num)
+                        valid_count += 1
+                    else:
+                        valid_count = 0
+                        break
+
+            if valid_count == 1:
+                # print("setting " + str(valid))
+                g = g.set_position(*valid)
+                return g
+    # columns
+    for c in range(9):
+        for r in range(9):
+            valid_count = 0
+            valid = ()
+            for num in range(1, 10):
+                cell = p.cell(r, c)
+                if cell is not None and num in cell:
+                    if valid_count == 0:
+                        valid = (r, c, num)
+                        valid_count += 1
+                    else:
+                        valid_count = 0
+                        break
+
+            if valid_count == 1:
+                # print("setting " + str(valid))
+                g = g.set_position(*valid)
+                return g
+
+    # boxes
+    # for r in range(0, 9, 3):
+    #     for c in range(0, 9, 3):
+    #         valid_count = 0
+    #         valid = ()
+    #         for num in range(1, 10):
+    #             for i in range(3):
+    #                 for j in range(3):
+    #                     cell = p.cell(r + i, c + j)
+    #                     if cell is not None and num in cell:
+    #                         if valid_count == 0:
+    #                             valid = (r, c, num)
+    #                             valid_count += 1
+    #                         else:
+    #                             valid_count = 0
+    #                             break
+
+    #         if valid_count == 1:
+    #             g = g.set_position(*valid)
+    #             return g
+
+    return g
+
+
 def _combined_size(sets):
     """Returns the combined size of an iterable of sets."""
     return functools.reduce(operator.add, (len(s) if s is not None else 0
@@ -124,10 +189,18 @@ def cells_to_try(p):
 def solve(g):
     """Returns a solution to g."""
     while True:
+        new = set_easy(g)
+        if new == g:
+            break
+        g = new
+
+
+    while True:
         new = set_trivial(g)
         if new == g:
             break
         g = new
+
 
     if not g.is_valid():
         return None
@@ -140,6 +213,7 @@ def solve(g):
             result = solve(g.set_position(row, column, value))
             if result is not None:
                 return result
+
     # Failed to solve. Time to try another branch down the possibilities tree.
     return None
 
