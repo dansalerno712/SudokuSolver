@@ -7,6 +7,8 @@
 #   - Brian Silverman
 
 import grid
+import functools
+import operator
 
 EXAMPLE_SOLUTION = grid.Grid((
         4, 8, 3, 9, 2, 1, 6, 5, 7,
@@ -63,11 +65,61 @@ def set_trivial(g):
                     g = g.set_position(r, c, next(iter(cell)))
     return g
 
+def _combined_size(sets):
+    """Returns the combined size of an iterable of sets."""
+    return functools.reduce(operator.add, (len(s) if s is not None else 0
+                                           for s in sets))
+
+def _sorted_by_combined_size(group):
+    """Returns indexes into a group of cell possibilities sorted by the smallest
+    size, excluding ones which are None."""
+    r = []
+    for i, l in zip(range(9), group):
+        s = _combined_size(group)
+        if s > 0:
+            r.append((i, s))
+    r.sort(key=operator.itemgetter(1))
+    return r
+
 def cells_to_try(p):
-    for r in range(9):
-        for c in range(9):
-            if p.cell(r, c) is not None:
-                yield r, c
+    sorted_rows = _sorted_by_combined_size(p.rows())
+    sorted_columns = _sorted_by_combined_size(p.columns())
+    sorted_squares = _sorted_by_combined_size(p.squares())
+    done = set()
+    while True:
+        row = sorted_rows[0] if sorted_rows else None
+        column = sorted_columns[0] if sorted_columns else None
+        square = sorted_squares[0] if sorted_squares else None
+        if row is None and column is None and square is None:
+            return
+
+        if (row is not None
+            and (column is None or row[1] <= column[1])
+            and (square is None or row[1] <= square[1])):
+            sorted_rows.pop(0)
+            for c in range(9):
+                pos = (row[0], c)
+                if pos not in done:
+                    done.add(pos)
+                    if p.cell(*pos) is not None:
+                        yield pos
+        elif column is not None and (square is None or column[1] <= square[1]):
+            sorted_columns.pop(0)
+            for r in range(9):
+                pos = (r, column[0])
+                if pos not in done:
+                    done.add(pos)
+                    if p.cell(*pos) is not None:
+                        yield pos
+        else:
+            sorted_squares.pop(0)
+            for r in range(square[0] // 3 * 3, square[0] // 3 * 3 + 3):
+                for c in range(square[0] % 3 * 3, square[0] % 3 * 3 + 3):
+                    pos = (r, c)
+                    if pos not in done:
+                        done.add(pos)
+                        if p.cell(*pos) is not None:
+                            yield pos
 
 def solve(g):
     """Returns a solution to g."""
@@ -115,12 +167,14 @@ def main():
     assert EXAMPLE_SOLUTION.is_complete() and EXAMPLE_SOLUTION.is_valid()
 
     euler_answer = 0
+    i = 0
     for g in grids:
         # Some basic sanity checking.
         assert not g.is_complete(), "%s is already finished" % (g,)
         assert g.is_valid(), "%s is impossible" % (g,)
 
-        print('Before:')
+        print('Before %d:' % i)
+        i += 1
         print(g.pretty())
         solved = solve(g)
         if not solved.is_complete():

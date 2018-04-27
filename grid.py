@@ -119,6 +119,21 @@ class GridStorage(object):
         """Returns a tuple with the values for the specified column."""
         return self.values[index::9]
 
+    def squares(self):
+        """Generates all of the squares."""
+        for i in range(9):
+            yield self.square(i)
+
+    def rows(self):
+        """Generates all of the rows."""
+        for i in range(9):
+            yield self.row(i)
+
+    def columns(self):
+        """Generates all of the columns."""
+        for i in range(9):
+            yield self.column(i)
+
 class Grid(GridStorage):
     """An immutable object representing a complete grid of numbers, or None to
     indicate blank squares.
