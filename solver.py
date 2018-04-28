@@ -65,70 +65,52 @@ def set_trivial(g):
                     g = g.set_position(r, c, next(iter(cell)))
     return g
 
+def _count_possibilities(g):
+    r = [0] * 10
+    for cell in g:
+        if cell is not None:
+            for value in cell:
+                r[value - 1] += 1
+    return r
+
+def _find_set_with_value(sets, value):
+    for i, v in zip(range(9), sets):
+        if v is not None and value in v:
+            return i
+    assert False
+
 def set_easy(g):
     p = possibilities(g)
     # rows
     for r in range(9):
-        for c in range(9):
-            valid_count = 0
-            valid = ()
-            for num in range(1, 10):
-                cell = p.cell(r, c)
-                if cell is not None and num in cell:
-                    if valid_count == 0:
-                        valid = (r, c, num)
-                        valid_count += 1
-                    else:
-                        valid_count = 0
-                        break
+        row = p.row(r)
+        counts = _count_possibilities(row)
+        for value in range(1, 10):
+            if counts[value - 1] == 1:
+                c = _find_set_with_value(row, value)
+                return g.set_position(r, c, value)
 
-            if valid_count == 1:
-                # print("setting " + str(valid))
-                g = g.set_position(*valid)
-                return g
     # columns
     for c in range(9):
-        for r in range(9):
-            valid_count = 0
-            valid = ()
-            for num in range(1, 10):
-                cell = p.cell(r, c)
-                if cell is not None and num in cell:
-                    if valid_count == 0:
-                        valid = (r, c, num)
-                        valid_count += 1
-                    else:
-                        valid_count = 0
-                        break
+        column = p.column(c)
+        counts = _count_possibilities(column)
+        for value in range(1, 10):
+            if counts[value - 1] == 1:
+                r = _find_set_with_value(column, value)
+                return g.set_position(r, c, value)
 
-            if valid_count == 1:
-                # print("setting " + str(valid))
-                g = g.set_position(*valid)
-                return g
-
-    # boxes
-    # for r in range(0, 9, 3):
-    #     for c in range(0, 9, 3):
-    #         valid_count = 0
-    #         valid = ()
-    #         for num in range(1, 10):
-    #             for i in range(3):
-    #                 for j in range(3):
-    #                     cell = p.cell(r + i, c + j)
-    #                     if cell is not None and num in cell:
-    #                         if valid_count == 0:
-    #                             valid = (r, c, num)
-    #                             valid_count += 1
-    #                         else:
-    #                             valid_count = 0
-    #                             break
-
-    #         if valid_count == 1:
-    #             g = g.set_position(*valid)
-    #             return g
+    # squares
+    for s in range(9):
+        square = p.square(s)
+        counts = _count_possibilities(square)
+        for value in range(1, 10):
+            if counts[value - 1] == 1:
+                i = _find_set_with_value(square, value)
+                r = s // 3 * 3 + i // 3
+                c = s % 3 * 3 + i % 3
+                return g.set_position(r, c, value)
 
     return g
-
 
 def _combined_size(sets):
     """Returns the combined size of an iterable of sets."""
@@ -189,18 +171,10 @@ def cells_to_try(p):
 def solve(g):
     """Returns a solution to g."""
     while True:
-        new = set_easy(g)
+        new = set_trivial(set_easy(g))
         if new == g:
             break
         g = new
-
-
-    while True:
-        new = set_trivial(g)
-        if new == g:
-            break
-        g = new
-
 
     if not g.is_valid():
         return None
