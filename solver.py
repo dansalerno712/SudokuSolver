@@ -244,6 +244,7 @@ def main():
             raise '------------- Failed to solve %d... ------------' % i
         else:
             assert solved.is_valid(), (solved,)
+            assert solved.matches(g), (solved, g)
 
             print('After %d:' % i)
             print(solved.pretty())

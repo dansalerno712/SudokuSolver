@@ -207,3 +207,9 @@ class Grid(GridStorage):
         of a None."""
         assert(self.is_complete())
         return self.cell(0, 0) * 100 + self.cell(0, 1) * 10 + self.cell(0, 2)
+
+    def matches(self, other):
+        for s, o in zip(self.values, other.values):
+            if s is not None and o is not None and s != o:
+                return False
+        return True
