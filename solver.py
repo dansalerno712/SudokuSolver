@@ -240,8 +240,8 @@ def main():
         print('Before %d:' % i)
         print(g.pretty())
         solved = solve(g)
-        if not solved.is_complete():
-            print('------------- Failed to solve %d... ------------' % i)
+        if solved is None or not solved.is_complete():
+            raise '------------- Failed to solve %d... ------------' % i
         else:
             assert solved.is_valid(), (solved,)
 
