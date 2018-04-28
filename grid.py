@@ -151,13 +151,13 @@ class Grid(GridStorage):
     def __hash__(self):
         # Don't hash to the same as just the values tuple, because that could be
         # undesirable for some use cases.
-        return hash(tuple(self.values, 971))
+        return hash((self.values, 971))
 
     def is_complete(self):
         """Returns True if there are no None (unknown) values.
 
         Note that this does not mean it is a valid solution."""
-        return not not next(filter(lambda x: x is None, self.values), True)
+        return all(x is not None for x in self.values)
 
     def is_valid(self):
         """Returns True if there are no conflicting values.

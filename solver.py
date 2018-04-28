@@ -52,17 +52,19 @@ def possibilities(g):
                 cell.difference_update(values)
     return result
 
+@functools.lru_cache(maxsize=None)
 def set_trivial(g):
     """Returns a grid with all the cells that only have one possibility filled
     in. Note that this may leave more cells with one a single possibility in the
     result."""
     p = possibilities(g)
+    if not _possibilities_valid(p):
+        return None
     for r in range(9):
         for c in range(9):
             cell = p.cell(r, c)
-            if cell is not None:
-                if len(cell) == 1:
-                    g = g.set_position(r, c, next(iter(cell)))
+            if cell is not None and len(cell) == 1:
+                g = g.set_position(r, c, next(iter(cell)))
     return g
 
 def _count_possibilities(g):
@@ -79,8 +81,14 @@ def _find_set_with_value(sets, value):
             return i
     assert False
 
+def _possibilities_valid(p):
+    return all(v is None or v for v in p.values)
+
+@functools.lru_cache(maxsize=None)
 def set_easy(g):
     p = possibilities(g)
+    if not _possibilities_valid(p):
+        return None
     # rows
     for r in range(9):
         row = p.row(r)
@@ -168,16 +176,22 @@ def cells_to_try(p):
                         if p.cell(*pos) is not None:
                             yield pos
 
+@functools.lru_cache(maxsize=None)
 def solve(g):
     """Returns a solution to g."""
+    if not g.is_valid():
+        return None
     while True:
-        new = set_trivial(set_easy(g))
+        new = set_easy(g)
+        if new is None or not new.is_valid():
+            return None
+        new = set_trivial(new)
+        if new is None or not new.is_valid():
+            return None
         if new == g:
             break
         g = new
 
-    if not g.is_valid():
-        return None
     if g.is_complete():
         return g
 
@@ -217,6 +231,11 @@ def main():
         # Some basic sanity checking.
         assert not g.is_complete(), "%s is already finished" % (g,)
         assert g.is_valid(), "%s is impossible" % (g,)
+
+        # Old cache entries aren't going to be useful, so just drop them.
+        set_trivial.cache_clear()
+        set_easy.cache_clear()
+        solve.cache_clear()
 
         print('Before %d:' % i)
         print(g.pretty())
