@@ -52,7 +52,6 @@ def possibilities(g):
                 cell.difference_update(values)
     return result
 
-@functools.lru_cache(maxsize=None)
 def set_trivial(g):
     """Returns a grid with all the cells that only have one possibility filled
     in. Note that this may leave more cells with one a single possibility in the
@@ -84,7 +83,6 @@ def _find_set_with_value(sets, value):
 def _possibilities_valid(p):
     return all(v is None or v for v in p.values)
 
-@functools.lru_cache(maxsize=None)
 def set_easy(g):
     p = possibilities(g)
     if not _possibilities_valid(p):
@@ -176,20 +174,21 @@ def cells_to_try(p):
                         if p.cell(*pos) is not None:
                             yield pos
 
-@functools.lru_cache(maxsize=None)
-def solve(g):
+def solve(g, seen_grids):
     """Returns a solution to g."""
-    if not g.is_valid():
+    if not g.is_valid() or g in seen_grids:
         return None
+    seen_grids.add(g)
     while True:
         new = set_easy(g)
-        if new is None or not new.is_valid():
+        if new is None or not new.is_valid() or (new != g and new in seen_grids):
             return None
         new = set_trivial(new)
-        if new is None or not new.is_valid():
+        if new is None or not new.is_valid() or (new != g and new in seen_grids):
             return None
         if new == g:
             break
+        seen_grids.add(new)
         g = new
 
     if g.is_complete():
@@ -198,7 +197,7 @@ def solve(g):
     p = possibilities(g)
     for row, column in cells_to_try(p):
         for value in p.cell(row, column):
-            result = solve(g.set_position(row, column, value))
+            result = solve(g.set_position(row, column, value), seen_grids)
             if result is not None:
                 return result
 
@@ -232,14 +231,9 @@ def main():
         assert not g.is_complete(), "%s is already finished" % (g,)
         assert g.is_valid(), "%s is impossible" % (g,)
 
-        # Old cache entries aren't going to be useful, so just drop them.
-        set_trivial.cache_clear()
-        set_easy.cache_clear()
-        solve.cache_clear()
-
         print('Before %d:' % i)
         print(g.pretty())
-        solved = solve(g)
+        solved = solve(g, set())
         if solved is None or not solved.is_complete():
             raise '------------- Failed to solve %d... ------------' % i
         else:
