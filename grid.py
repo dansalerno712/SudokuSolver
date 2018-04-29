@@ -27,10 +27,10 @@ class GridStorage(object):
     We store the values in a single tuple, and expose them in various
     convenient ways via accessors. Doing it this way makes creating modified
     copies cheap (create list and assign), and the only downside is one of the
-    many ways of accessing the data could potentially be simpler.
+    many ways (any one of them, depending on layout) of accessing the data could
+    potentially be simpler.
 
-    All locations are identified via 0-based row-major indexing, and values are
-    the actual 1-based values.
+    All locations are identified via 0-based row-major indexing.
 
     All locations indices start in the upper left corner. That is, these are the
     3x3 squares, and also the cells within each square:
@@ -123,12 +123,12 @@ class GridStorage(object):
             yield self.column(i)
 
 class Grid(GridStorage):
-    """An immutable object representing a complete grid of numbers, or None to
-    indicate blank squares.
+    """An immutable object representing a complete grid of numbers. These values
+    are stored as the actual 1-based values (or None to indicate an empty cell).
 
     See the GridStorage docs for details about the layout of the storage. Note
     that this subclass always stores the values in a tuple, to preserve
-    immutability."""
+    immutability. Because of this, it is also hashable."""
 
     def __init__(self, values):
         super().__init__(tuple(values))
@@ -147,7 +147,8 @@ class Grid(GridStorage):
         return all(x is not None for x in self.values)
 
     def is_valid(self):
-        """Returns True if there are no conflicting values.
+        """Returns True if there are no conflicting values within any
+        row/column/square.
 
         Note that this deliberately ignores multiple None values."""
         for r in range(9):
@@ -189,13 +190,16 @@ class Grid(GridStorage):
 
     def euler_answer(self):
         """Returns the 3 digit number represented by the top left corner of
-        the solved Sudoku puzzle as per the Project Euler specs. Asserts
-        that the puzzle is completed so I can't try to make a number out
-        of a None."""
-        assert(self.is_complete())
+        the solved Sudoku puzzle as per the Project Euler specs.
+        self.is_complete() must be True first for this to make sense."""
+        assert self.is_complete()
         return self.cell(0, 0) * 100 + self.cell(0, 1) * 10 + self.cell(0, 2)
 
     def matches(self, other):
+        """Returns True if all non-None values in self and other are the same.
+
+        If one of self or other is an input, this returns True if the other is
+        a valid solution or partial solution of it."""
         for s, o in zip(self.values, other.values):
             if s is not None and o is not None and s != o:
                 return False

@@ -122,6 +122,24 @@ class TestGrid(unittest.TestCase):
         values[6] = 3
         self.assertTrue(grid.Grid(values).is_valid())
 
+    def test_matches(self):
+        g = grid.Grid(TEST_VALUES)
+        self.assertTrue(grid.Grid(TEST_VALUES).matches(g))
+
+        values = list(TEST_VALUES)
+        values[5] = 9
+        self.assertFalse(grid.Grid(values).matches(g))
+
+        values = list(TEST_VALUES)
+        values[5] = None
+        self.assertTrue(grid.Grid(values).matches(g))
+
+        self.assertTrue(grid.Grid([None] * len(TEST_VALUES)).matches(g))
+
+        values = [None] * len(TEST_VALUES)
+        values[2] = 3
+        self.assertTrue(grid.Grid(values).matches(g))
+
     def test_pretty(self):
         expected = \
 """+-------+-------+-------+

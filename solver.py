@@ -10,19 +10,6 @@ import grid
 import functools
 import operator
 
-EXAMPLE_SOLUTION = grid.Grid((
-        4, 8, 3, 9, 2, 1, 6, 5, 7,
-        9, 6, 7, 3, 4, 5, 8, 2, 1,
-        2, 5, 1, 8, 7, 6, 4, 9, 3,
-        5, 4, 8, 1, 3, 2, 9, 7, 6,
-        7, 2, 9, 5, 6, 4, 1, 3, 8,
-        1, 3, 6, 7, 9, 8, 2, 4, 5,
-        3, 7, 2, 6, 8, 9, 5, 1, 4,
-        8, 1, 4, 2, 5, 3, 7, 6, 9,
-        6, 9, 5, 4, 1, 7, 3, 8, 2,
-))
-"""The solution to the first grid from the problem."""
-
 _ALL_VALUES = (1, 2, 3, 4, 5, 6, 7, 8, 9)
 
 def possibilities(g):
@@ -66,15 +53,20 @@ def set_trivial(g):
                 g = g.set_position(r, c, next(iter(cell)))
     return g
 
-def _count_possibilities(g):
+def _count_possibilities(sets):
+    """Returns a list where the value at each index i is the number of cells the
+    value i+1 can go in sets."""
     r = [0] * 10
-    for cell in g:
+    for cell in sets:
         if cell is not None:
             for value in cell:
                 r[value - 1] += 1
     return r
 
 def _find_set_with_value(sets, value):
+    """Returns the index into sets which contains value.
+
+    There must be exactly one of these."""
     for i, v in zip(range(9), sets):
         if v is not None and value in v:
             return i
@@ -84,14 +76,22 @@ def _possibilities_valid(p):
     return all(v is None or v for v in p.values)
 
 def set_easy(g):
+    """Returns a grid with one of the values that has only one possible location
+    within a row/column/square filled in, or the same grid if there aren't any.
+
+    This only does a single one because all the work needs to be redone to do
+    another one anyways, and it generally makes sense to try a set_trivial in
+    between successive set_easy calls because that's cheaper."""
     p = possibilities(g)
     if not _possibilities_valid(p):
         return None
+
     # rows
     for r in range(9):
         row = p.row(r)
         counts = _count_possibilities(row)
         for value in range(1, 10):
+            # If there's only one place for the value, then go ahead and set it.
             if counts[value - 1] == 1:
                 c = _find_set_with_value(row, value)
                 return g.set_position(r, c, value)
@@ -124,8 +124,8 @@ def _combined_size(sets):
                                            for s in sets))
 
 def _sorted_by_combined_size(group):
-    """Returns indexes into a group of cell possibilities sorted by the smallest
-    size, excluding ones which are None."""
+    """Returns a list of (i, s) where i is the index into a group of cell
+    possibilities and s is its total size, sorted by increasing size."""
     r = []
     for i, l in zip(range(9), iter(group)):
         s = _combined_size(l)
@@ -135,27 +135,40 @@ def _sorted_by_combined_size(group):
     return r
 
 def cells_to_try(p):
+    """Generates (row, column) of cells to try filling in. Does this is in an
+    optimized order to minimize backtracking fanout."""
+
+    # First, sort all the groups we could use to generate cells.
     sorted_rows = _sorted_by_combined_size(p.rows())
     sorted_columns = _sorted_by_combined_size(p.columns())
     sorted_squares = _sorted_by_combined_size(p.squares())
+
+    # All of the locations we've generated already, to avoid duplicates.
     done = set()
+
     while True:
         row = sorted_rows[0] if sorted_rows else None
         column = sorted_columns[0] if sorted_columns else None
         square = sorted_squares[0] if sorted_squares else None
         if row is None and column is None and square is None:
+            # This means we did all of the groups, so we must be done.
             return
 
+        # If we have a row and neither of the other two has a smaller count.
         if (row is not None
             and (column is None or row[1] <= column[1])
             and (square is None or row[1] <= square[1])):
+            # Remove this row because we're going to use it.
             sorted_rows.pop(0)
+            # Now go through all the cells in it and yield it iff it doesn't
+            # already have a value.
             for c in range(9):
                 pos = (row[0], c)
                 if pos not in done:
                     done.add(pos)
                     if p.cell(*pos) is not None:
                         yield pos
+        # If we have a column and the square doesn't have a smaller count.
         elif column is not None and (square is None or column[1] <= square[1]):
             sorted_columns.pop(0)
             for r in range(9):
@@ -164,6 +177,7 @@ def cells_to_try(p):
                     done.add(pos)
                     if p.cell(*pos) is not None:
                         yield pos
+        # Otherwise we must have a square, so use it.
         else:
             sorted_squares.pop(0)
             for r in range(square[0] // 3 * 3, square[0] // 3 * 3 + 3):
@@ -175,10 +189,19 @@ def cells_to_try(p):
                             yield pos
 
 def solve(g, seen_grids):
-    """Returns a solution to g."""
+    """Returns a solution to g, or None if it's not possible. seen_grids is a
+    set of grids which have already been tried as solutions to this puzzle, and
+    so must not be on the untried path to any solutions."""
     if not g.is_valid() or g in seen_grids:
+        # If g is already in seen_grids and it was on the path to the solution,
+        # we would've found it already and not be here. Therefore, it must not
+        # lead to the solution, so just stop now.
         return None
     seen_grids.add(g)
+
+    # Alternate set_easy and set_trivial until they stop finding stuff, or bail
+    # out early if they generate something we've already seen or that we can
+    # easily tell won't lead to a solution.
     while True:
         new = set_easy(g)
         if new is None or not new.is_valid() or (new != g and new in seen_grids):
@@ -192,6 +215,7 @@ def solve(g, seen_grids):
         g = new
 
     if g.is_complete():
+        # Yay, we're done!
         return g
 
     p = possibilities(g)
@@ -199,9 +223,12 @@ def solve(g, seen_grids):
         for value in p.cell(row, column):
             result = solve(g.set_position(row, column, value), seen_grids)
             if result is not None:
+                # If it returned something, we found the solution, so propagate
+                # it back up.
                 return result
 
-    # Failed to solve. Time to try another branch down the possibilities tree.
+    # Failed to solve. Time to backtrack and try another branch down the
+    # possibilities tree.
     return None
 
 def main():
@@ -231,21 +258,21 @@ def main():
         assert not g.is_complete(), "%s is already finished" % (g,)
         assert g.is_valid(), "%s is impossible" % (g,)
 
-        print('Before %d:' % i)
+        print("Before %d:" % i)
         print(g.pretty())
         solved = solve(g, set())
         if solved is None or not solved.is_complete():
-            raise '------------- Failed to solve %d... ------------' % i
+            raise "------------- Failed to solve %d... ------------" % i
         else:
             assert solved.is_valid(), (solved,)
             assert solved.matches(g), (solved, g)
 
-            print('After %d:' % i)
+            print("After %d:" % i)
             print(solved.pretty())
 
             euler_answer += solved.euler_answer()
         i += 1
-    print('Euler answer: %d' % euler_answer)
+    print("Euler answer: %d" % euler_answer)
 
 if __name__ == "__main__":
     main()
