@@ -20,18 +20,6 @@ def _is_unique(l):
     no_nones = list(_filter_nones(l))
     return len(no_nones) == len(set(no_nones))
 
-def _min_and_max(l):
-    """Returns (min, max) of l ignoring Nones.
-
-    Returns (None, None) if there are no non-None elements in l."""
-    min_r, max_r = None, None
-    for e in _filter_nones(l):
-        if min_r is None or e < min_r:
-            min_r = e
-        if max_r is None or e > max_r:
-            max_r = e
-    return min_r, max_r
-
 class GridStorage(object):
     """An object representing something stored in a Sudoku-style grid. These
     may be any kind of object.
@@ -144,9 +132,8 @@ class Grid(GridStorage):
 
     def __init__(self, values):
         super().__init__(tuple(values))
-        min_in, max_in = _min_and_max(self.values)
-        assert min_in is None or min_in >= 1, "invalid value"
-        assert max_in is None or max_in <= 9, "invalid value"
+        for v in self.values:
+          assert v is None or (v >= 1 and v <= 9), "invalid value"
 
     def __hash__(self):
         # Don't hash to the same as just the values tuple, because that could be
